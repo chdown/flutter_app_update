@@ -28,6 +28,11 @@ class AzhonAppUpdate {
     });
   }
 
+  ///安装
+  static Future<bool> install() async {
+    return await _channel.invokeMethod('install');
+  }
+
   ///监听
   static listener(Function callback) {
     if (!Platform.isAndroid) return;

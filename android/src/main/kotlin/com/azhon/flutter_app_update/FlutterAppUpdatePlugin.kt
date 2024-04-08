@@ -8,6 +8,7 @@ import com.azhon.appupdate.listener.OnButtonClickListener
 import com.azhon.appupdate.listener.OnDownloadListener
 import com.azhon.appupdate.manager.DownloadManager
 import com.azhon.appupdate.util.ApkUtil
+import com.azhon.appupdate.config.Constant
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -18,22 +19,24 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import org.json.JSONObject
 import java.io.File
+import kotlin.properties.Delegates.notNull
 
 
 class FlutterAppUpdatePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
-    EventChannel.StreamHandler {
+        EventChannel.StreamHandler {
 
     private lateinit var channel: MethodChannel
     private lateinit var applicationContext: Context
     private lateinit var activity: Activity
     private var events: EventChannel.EventSink? = null
     private var manager: DownloadManager? = null
+    private var apk: File? = null;
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "azhon_app_update")
         channel.setMethodCallHandler(this)
         val eventChannel =
-            EventChannel(flutterPluginBinding.binaryMessenger, "azhon_app_update_listener")
+                EventChannel(flutterPluginBinding.binaryMessenger, "azhon_app_update_listener")
         eventChannel.setStreamHandler(this)
         applicationContext = flutterPluginBinding.applicationContext
     }
@@ -66,6 +69,9 @@ class FlutterAppUpdatePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
             Constants.CANCEL_METHOD -> {
                 cancel(result)
             }
+            Constants.INSTALL_METHOD -> {
+                install(result)
+            }
             else -> {
                 result.notImplemented()
             }
@@ -79,7 +85,7 @@ class FlutterAppUpdatePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
 
     private fun getVersionName(result: Result) {
         val packageInfo =
-            applicationContext.packageManager.getPackageInfo(applicationContext.packageName, 0)
+                applicationContext.packageManager.getPackageInfo(applicationContext.packageName, 0)
         result.success(packageInfo.versionName)
     }
 
@@ -90,7 +96,7 @@ class FlutterAppUpdatePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         val model = call.argument<HashMap<String, Any>>("model")
         //获取图标
         val smallIcon = applicationContext.resources.getIdentifier(
-            model!!["smallIcon"] as String, "mipmap", applicationContext.packageName
+                model!!["smallIcon"] as String, "mipmap", applicationContext.packageName
         )
         manager = DownloadManager.Builder(activity).run {
             apkName(model["apkName"] as String)
@@ -113,6 +119,15 @@ class FlutterAppUpdatePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     private fun cancel(result: Result) {
         manager?.cancel()
         result.success(true)
+    }
+
+    private fun install(result: Result) {
+        try {
+            ApkUtil.installApk(activity, Constant.AUTHORITIES!!, apk!!);
+            result.success(true)
+        } catch (ex: Exception) {
+            result.success(false)
+        }
     }
 
     //判断是否为空
@@ -150,6 +165,7 @@ class FlutterAppUpdatePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         }
 
         override fun done(apk: File) {
+            this@FlutterAppUpdatePlugin.apk = apk;
             manager = null
             val json = json("done")
             json.put("apk", apk.path)

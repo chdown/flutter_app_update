@@ -29,12 +29,16 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   String url =
       "https://imtt.dd.qq.com/16891/apk/FA48766BA12A41A1D619CB4B152889C6.apk?fsname=com.estrongs.android.pop_4.2.3.3_10089.apk&csr=1bbd";
+  String path = '';
 
   @override
   void initState() {
     super.initState();
     AzhonAppUpdate.listener((map) {
       debugPrint(map['type']);
+      if(map['type']=='done'){
+        path = map['apk'];
+      }
     });
   }
 
@@ -50,6 +54,9 @@ class _HomePageState extends State<HomePage> {
           }),
           _item('强制更新', () {
             _showUpdateDialog(true);
+          }),
+          _item('直接安装', () {
+            AzhonAppUpdate.install();
           }),
           _item('取消下载', () {
             AzhonAppUpdate.cancel.then((value) {
