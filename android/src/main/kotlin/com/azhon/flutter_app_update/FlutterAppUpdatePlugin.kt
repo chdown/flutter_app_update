@@ -19,7 +19,6 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import org.json.JSONObject
 import java.io.File
-import kotlin.properties.Delegates.notNull
 
 
 class FlutterAppUpdatePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
