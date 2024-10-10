@@ -25,9 +25,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    if (project.android.hasProperty("namespace")) {
-        nameSpace "com.azhon.flutter_app_update"
-    }
+    nameSpace "com.azhon.flutter_app_update"
     compileSdkVersion 31
 
     compileOptions {
